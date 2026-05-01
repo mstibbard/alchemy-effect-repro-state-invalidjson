@@ -6,14 +6,12 @@
 	"scripts": {
 		"deploy": "alchemy deploy",
 		"dev": "alchemy dev",
-		"test": "echo 'No tests yet'",
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
 		"effect": "catalog:"
 	},
 	"devDependencies": {
-		"@repo/tsconfig": "workspace:*",
 		"alchemy": "catalog:"
 	}
 }
