@@ -1,5 +1,5 @@
 {
-	"name": "flow",
+	"name": "alchemy-repro",
 	"private": true,
 	"workspaces": {
 		"packages": [
