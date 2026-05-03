@@ -8,6 +8,7 @@ import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
 import { TaskApiLive } from "./http.ts";
 import { TaskRpc, TaskRpcLive } from "./rpc.ts";
+import { ExampleSecret } from "./secret.ts";
 
 const AppLive = Layer.mergeAll(
 	TaskApiLive,
@@ -22,8 +23,12 @@ const AppLive = Layer.mergeAll(
 export default Cloudflare.Worker(
 	"Worker",
 	{ main: import.meta.path },
-	HttpRouter.toHttpEffect(AppLive).pipe(
-		Effect.map((fetch) => ({ fetch })),
-		Effect.provide(Layer.mergeAll(HttpPlatform.layer, Etag.layer)),
-	),
+	Effect.gen(function* () {
+		const _secret = yield* Cloudflare.Secret.bind(ExampleSecret);
+
+		return yield* HttpRouter.toHttpEffect(AppLive).pipe(
+			Effect.map((fetch) => ({ fetch })),
+			Effect.provide(Layer.mergeAll(HttpPlatform.layer, Etag.layer)),
+		);
+	}).pipe(Effect.provide(Cloudflare.SecretBindingLive)),
 );

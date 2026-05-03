@@ -1,5 +1,4 @@
 {
-	"exclude": ["node_modules", "dist", "vendor"],
 	"compilerOptions": {
 		"types": ["bun"],
 		// Enable latest features
