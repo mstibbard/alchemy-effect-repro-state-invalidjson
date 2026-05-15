@@ -12,13 +12,13 @@
 		}
 	},
 	"scripts": {
+		"clean": "git clean -fqdx . -e .env",
 		"deploy": "bun run --workspaces --if-present deploy",
 		"dev": "bun run --workspaces --if-present --parallel dev",
 		"fmt": "oxfmt",
 		"lint": "oxlint",
 		"precommit": "bun fmt && bun typecheck && bun lint && bun run test",
 		"prepare": "effect-tsgo patch",
-		"purge:node_modules": "find . -name 'node_modules' -type d -prune -print -exec rm -rf '{}' \\;",
 		"test": "bun run --workspaces --if-present test",
 		"test:watch": "bun run --workspaces --if-present --parallel test:watch",
 		"typecheck": "bun run --workspaces --if-present typecheck"

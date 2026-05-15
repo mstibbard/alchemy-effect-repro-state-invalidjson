@@ -9,7 +9,7 @@ export default Alchemy.Stack(
 	"AlchemyReproApi",
 	{
 		providers: Cloudflare.providers(),
-		state: Cloudflare.state(),
+		state: Alchemy.localState(),
 	},
 	Effect.gen(function* () {
 		const store = yield* Store;

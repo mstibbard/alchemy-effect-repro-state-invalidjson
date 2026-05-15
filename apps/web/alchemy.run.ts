@@ -18,7 +18,7 @@ export default Alchemy.Stack(
 	"AlchemyReproWebsite",
 	{
 		providers: Cloudflare.providers(),
-		state: Cloudflare.state(),
+		state: Alchemy.localState(),
 	},
 	Effect.gen(function* () {
 		const app = yield* Website;
