@@ -3,6 +3,7 @@ import { expect } from "bun:test";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Test from "alchemy/Test/Bun";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import * as HttpBody from "effect/unstable/http/HttpBody";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -36,6 +37,12 @@ test(
 
 		const retrieved = yield* HttpClientResponse.schemaBodyJson(Task)(get);
 		expect(retrieved).toEqual(created);
+
+		const list = yield* HttpClient.get(`${url}/`);
+		expect(list.status).toBe(200);
+
+		const tasks = yield* HttpClientResponse.schemaBodyJson(Schema.Array(Task))(list);
+		expect(tasks).toContainEqual(created);
 	}),
 );
 

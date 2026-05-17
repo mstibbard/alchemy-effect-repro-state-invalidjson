@@ -6,29 +6,32 @@ import * as HttpPlatform from "effect/unstable/http/HttpPlatform";
 import * as HttpRouter from "effect/unstable/http/HttpRouter";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
-import { TaskApiLive } from "../http.ts";
-import { TaskRpc, TaskRpcLive } from "../rpc.ts";
+import { makeTaskApiLive } from "../http.ts";
+import { makeTaskRpcLive, TaskRpc } from "../rpc.ts";
+import { ApiKv } from "./kv.ts";
 import { ExampleSecret } from "./secret.ts";
 
-const AppLive = Layer.mergeAll(
-	TaskApiLive,
+const makeAppLive = (tasks: Cloudflare.KVNamespaceClient<string>) =>
+	Layer.mergeAll(
+		makeTaskApiLive(tasks),
 
-	RpcServer.layerHttp({
-		group: TaskRpc,
-		path: "/rpc",
-		protocol: "http",
-	}),
-).pipe(Layer.provide(TaskRpcLive), Layer.provide(RpcSerialization.layerJson));
+		RpcServer.layerHttp({
+			group: TaskRpc,
+			path: "/rpc",
+			protocol: "http",
+		}),
+	).pipe(Layer.provide(makeTaskRpcLive(tasks)), Layer.provide(RpcSerialization.layerJson));
 
 export class Worker extends Cloudflare.Worker<Worker, {}>()("Worker", { main: import.meta.path }) {}
 
 export default Worker.make(
 	Effect.gen(function* () {
 		yield* Cloudflare.Secret.bind(ExampleSecret);
-		const fetch = yield* HttpRouter.toHttpEffect(AppLive).pipe(
+		const tasks = yield* Cloudflare.KVNamespace.bind(ApiKv);
+		const fetch = HttpRouter.toHttpEffect(makeAppLive(tasks)).pipe(
 			Effect.provide(Layer.mergeAll(HttpPlatform.layer, Etag.layer)),
 		);
 
 		return Worker.of({ fetch });
-	}).pipe(Effect.provide(Cloudflare.SecretBindingLive)),
+	}).pipe(Effect.provide(Layer.mergeAll(Cloudflare.SecretBindingLive, Cloudflare.KVNamespaceBindingLive))),
 );
