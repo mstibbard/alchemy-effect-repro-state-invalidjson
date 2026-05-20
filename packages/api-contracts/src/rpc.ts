@@ -1,10 +1,10 @@
-import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "@repo/domain/task";
+import { Task, TaskNotFound, TaskUnavailable } from "@repo/domain/task";
 import * as Schema from "effect/Schema";
 import { Rpc, RpcGroup } from "effect/unstable/rpc";
 
 export const getTaskRpc = Rpc.make("getTask", {
 	success: Task,
-	error: Schema.Union([TaskNotFound, TaskStorageFailed, TaskDecodeFailed]),
+	error: Schema.Union([TaskNotFound, TaskUnavailable]),
 	payload: {
 		id: Schema.String,
 	},
@@ -12,7 +12,7 @@ export const getTaskRpc = Rpc.make("getTask", {
 
 export const createTaskRpc = Rpc.make("createTask", {
 	success: Task,
-	error: TaskStorageFailed,
+	error: TaskUnavailable,
 	payload: {
 		title: Schema.String,
 	},

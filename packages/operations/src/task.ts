@@ -1,4 +1,10 @@
-import { Task, type TaskDecodeFailed, type TaskNotFound, type TaskStorageFailed } from "@repo/domain/task";
+import {
+	Task,
+	TaskUnavailable,
+	type TaskDecodeFailed,
+	type TaskNotFound,
+	type TaskStorageFailed,
+} from "@repo/domain/task";
 import type * as Effect from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
@@ -12,22 +18,30 @@ export interface IdGenerator {
 
 export interface TaskStore<R = never> {
 	readonly list: Effect.Effect<Array<Task>, TaskStorageFailed | TaskDecodeFailed, R>;
-	readonly get: (input: { readonly id: string }) => Effect.Effect<Task, TaskNotFound | TaskStorageFailed | TaskDecodeFailed, R>;
+	readonly get: (input: {
+		readonly id: string;
+	}) => Effect.Effect<Task, TaskNotFound | TaskStorageFailed | TaskDecodeFailed, R>;
 	readonly save: (task: Task) => Effect.Effect<Task, TaskStorageFailed, R>;
 }
 
 export interface TaskOperations<R = never> {
-	readonly list: Effect.Effect<Array<Task>, TaskStorageFailed | TaskDecodeFailed, R>;
-	readonly get: (input: { readonly id: string }) => Effect.Effect<Task, TaskNotFound | TaskStorageFailed | TaskDecodeFailed, R>;
-	readonly create: (input: CreateTaskInput) => Effect.Effect<Task, TaskStorageFailed, R>;
+	readonly list: Effect.Effect<Array<Task>, TaskUnavailable, R>;
+	readonly get: (input: { readonly id: string }) => Effect.Effect<Task, TaskNotFound | TaskUnavailable, R>;
+	readonly create: (input: CreateTaskInput) => Effect.Effect<Task, TaskUnavailable, R>;
 }
 
-export const makeTaskOperations = <R>(
-	tasks: TaskStore<R>,
-	ids: IdGenerator,
-): TaskOperations<R> => ({
-	list: tasks.list,
-	get: tasks.get,
+const unavailable = (error: TaskStorageFailed | TaskDecodeFailed) =>
+	new TaskUnavailable({
+		message: "Task persistence is unavailable",
+		cause: error._tag === "TaskDecodeFailed" ? ("corrupt" as const) : ("storage" as const),
+	});
+
+const unavailableUnlessNotFound = (error: TaskNotFound | TaskStorageFailed | TaskDecodeFailed) =>
+	error._tag === "TaskNotFound" ? error : unavailable(error);
+
+export const makeTaskOperations = <R>(tasks: TaskStore<R>, ids: IdGenerator): TaskOperations<R> => ({
+	list: tasks.list.pipe(EffectRuntime.mapError(unavailable)),
+	get: (input) => tasks.get(input).pipe(EffectRuntime.mapError(unavailableUnlessNotFound)),
 	create: ({ title }) =>
 		ids.nextUuid.pipe(
 			EffectRuntime.map(
@@ -39,5 +53,6 @@ export const makeTaskOperations = <R>(
 					}),
 			),
 			EffectRuntime.flatMap(tasks.save),
+			EffectRuntime.mapError(unavailable),
 		),
 });

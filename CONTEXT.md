@@ -10,6 +10,10 @@ _Avoid_: Todo, item
 
 **Task operation**:
 A use-case action over Tasks, currently create, get, and list. Task operations own Task defaults and task-level behaviour; storage only saves and loads Tasks.
+Callers of Task operations should not need to know anything about the underlying persistence adapter or its failure modes.
+Task operation callers may distinguish a missing Task from unavailable Task persistence; corrupt persisted data is treated as unavailable Task persistence.
+Unavailable Task persistence carries an internal cause for observability, but public HTTP methods must not leak that cause.
+Effect RPC is an internal Task operation adapter and may expose internal Task operation error causes.
 _Avoid_: Repository operation, transport handler
 
 ## Example Dialogue

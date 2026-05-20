@@ -8,12 +8,9 @@ export class Task extends Schema.Class<Task>("Task")({
 
 export class TaskNotFound extends Schema.TaggedClass<TaskNotFound>()("TaskNotFound", { id: Schema.String }) {}
 
-export class CreateTaskFailed extends Schema.TaggedClass<CreateTaskFailed>()("CreateTaskFailed", {
+export class TaskUnavailable extends Schema.TaggedClass<TaskUnavailable>()("TaskUnavailable", {
 	message: Schema.String,
-}) {}
-
-export class ListTasksFailed extends Schema.TaggedClass<ListTasksFailed>()("ListTasksFailed", {
-	message: Schema.String,
+	cause: Schema.Literals(["storage", "corrupt"]),
 }) {}
 
 export class TaskStorageFailed extends Schema.TaggedClass<TaskStorageFailed>()("TaskStorageFailed", {
