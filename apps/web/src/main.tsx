@@ -1,20 +1,17 @@
-import { Client } from "@repo/api/client";
 import * as Effect from "effect/Effect";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-const client = Client(import.meta.env.VITE_API_URL!).pipe(Effect.provide(FetchHttpClient.layer));
+import { TaskClient, TaskClientLive } from "./task-client.ts";
 
-const result = await client.pipe(
-	Effect.flatMap((client) =>
-		Effect.gen(function* () {
-			const created = yield* client.createTask({ title: "Created from web via RPC" });
-			const found = yield* client.getTask({ id: created.id });
+const result = await Effect.gen(function* () {
+	const client = yield* TaskClient;
+	const created = yield* client.createTask({ title: "Created from web via RPC" });
+	const found = yield* client.getTask({ id: created.id });
 
-			return { created, found };
-		}),
-	),
+	return { created, found };
+}).pipe(
+	Effect.provide(TaskClientLive),
 	Effect.scoped,
 	Effect.runPromise,
 );

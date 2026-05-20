@@ -6,6 +6,7 @@
 	"exports": {
 		"./client": "./src/client.ts",
 		"./rpc": "./src/rpc.ts",
+		"./task": "./src/task.ts",
 		"./*": "./src/infra/*.ts"
 	},
 	"scripts": {
