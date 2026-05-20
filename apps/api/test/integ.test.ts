@@ -1,3 +1,5 @@
+import { Client } from "@repo/api-contracts/client";
+import { Task } from "@repo/domain/task";
 import { expect } from "bun:test";
 
 import * as Cloudflare from "alchemy/Cloudflare";
@@ -10,8 +12,6 @@ import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 import Stack from "../alchemy.run.ts";
-import { Client } from "../src/client.ts";
-import { Task } from "../src/task.ts";
 
 const { test, beforeAll, afterAll, deploy, destroy } = Test.make({
 	providers: Cloudflare.providers(),

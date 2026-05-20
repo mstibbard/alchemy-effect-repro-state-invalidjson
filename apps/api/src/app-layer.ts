@@ -5,13 +5,14 @@ import * as Etag from "effect/unstable/http/Etag";
 import * as HttpPlatform from "effect/unstable/http/HttpPlatform";
 import * as HttpRouter from "effect/unstable/http/HttpRouter";
 import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
+import * as HttpApiScalar from "effect/unstable/httpapi/HttpApiScalar";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
-import { TaskApiLive } from "./http.ts";
+import { TaskApi, TaskApiLive } from "./http.ts";
 import { TaskRpc, TaskRpcLive } from "./rpc.ts";
-import { IdGeneratorLive } from "./services/id-generator.ts";
-import { makeKvTaskRepositoryLive } from "./services/task-repository-kv.ts";
-import { TaskOperationsLive } from "./task-operations.ts";
+import { makeKvTaskStoreLive } from "./tasks/task-store-kv.ts";
+import { TaskOperationsLive } from "./tasks/task-operations.ts";
+import { IdGeneratorLive } from "./util/id-generator.ts";
 
 const corsHeaders = {
 	"access-control-allow-origin": "*",
@@ -22,6 +23,14 @@ const corsHeaders = {
 export const makeAppLive = (tasks: KVNamespaceClient<string>) =>
 	Layer.mergeAll(
 		TaskApiLive,
+		HttpApiScalar.layerCdn(TaskApi, {
+			path: "/docs",
+			scalar: {
+				layout: "modern",
+				showOperationId: true,
+				hideModels: false,
+			},
+		}),
 		RpcServer.layerHttp({
 			group: TaskRpc,
 			path: "/rpc",
@@ -34,7 +43,7 @@ export const makeAppLive = (tasks: KVNamespaceClient<string>) =>
 	).pipe(
 		Layer.provide(TaskRpcLive),
 		Layer.provide(TaskOperationsLive),
-		Layer.provide(makeKvTaskRepositoryLive(tasks)),
+		Layer.provide(makeKvTaskStoreLive(tasks)),
 		Layer.provide(IdGeneratorLive),
 		Layer.provide(RpcSerialization.layerJson),
 	);

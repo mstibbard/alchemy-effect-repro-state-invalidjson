@@ -1,0 +1,19 @@
+{
+	"name": "@repo/api-contracts",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./client": "./src/client.ts",
+		"./http": "./src/http.ts",
+		"./rpc": "./src/rpc.ts",
+		"./task-client": "./src/task-client.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"@repo/domain": "workspace:*",
+		"effect": "catalog:"
+	}
+}

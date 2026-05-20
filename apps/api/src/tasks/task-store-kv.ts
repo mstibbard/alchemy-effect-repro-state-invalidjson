@@ -1,10 +1,10 @@
 import type { KVNamespaceClient } from "alchemy/Cloudflare";
+import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "@repo/domain/task";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "../domain/task.ts";
-import { TaskRepository } from "./task-repository.ts";
+import { TaskStoreContext } from "./task-store.ts";
 
 const storageFailed = (cause: { readonly message: string }) => new TaskStorageFailed({ message: cause.message });
 
@@ -13,7 +13,7 @@ const decodeTask = (input: unknown): Effect.Effect<Task, TaskDecodeFailed> =>
 		Effect.mapError((error) => new TaskDecodeFailed({ message: String(error) })),
 	);
 
-export const makeKvTaskRepository = (tasks: KVNamespaceClient<string>): TaskRepository["Service"] => ({
+export const makeKvTaskStore = (tasks: KVNamespaceClient<string>): TaskStoreContext["Service"] => ({
 	list: tasks
 		.list()
 		.pipe(
@@ -53,5 +53,5 @@ export const makeKvTaskRepository = (tasks: KVNamespaceClient<string>): TaskRepo
 			.pipe(Effect.mapError(storageFailed), Effect.as(task)),
 });
 
-export const makeKvTaskRepositoryLive = (tasks: KVNamespaceClient<string>) =>
-	Layer.succeed(TaskRepository)(makeKvTaskRepository(tasks));
+export const makeKvTaskStoreLive = (tasks: KVNamespaceClient<string>) =>
+	Layer.succeed(TaskStoreContext)(makeKvTaskStore(tasks));

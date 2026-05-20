@@ -1,0 +1,15 @@
+{
+	"name": "@repo/domain",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./task": "./src/task.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"effect": "catalog:"
+	}
+}

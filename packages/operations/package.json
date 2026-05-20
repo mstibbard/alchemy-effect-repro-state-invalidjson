@@ -1,0 +1,17 @@
+{
+	"name": "@repo/operations",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./task": "./src/task.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"@repo/domain": "workspace:*",
+		"effect": "catalog:"
+	}
+}

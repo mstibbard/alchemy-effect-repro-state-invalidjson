@@ -4,9 +4,6 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		"./client": "./src/client.ts",
-		"./rpc": "./src/rpc.ts",
-		"./task": "./src/task.ts",
 		"./*": "./src/infra/*.ts"
 	},
 	"scripts": {
@@ -15,6 +12,9 @@
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
+		"@repo/api-contracts": "workspace:*",
+		"@repo/domain": "workspace:*",
+		"@repo/operations": "workspace:*",
 		"effect": "catalog:"
 	},
 	"devDependencies": {
