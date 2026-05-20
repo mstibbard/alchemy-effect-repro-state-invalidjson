@@ -9,6 +9,7 @@ import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
 import { TaskApiLive } from "../http.ts";
 import { TaskRpc, TaskRpcLive } from "../rpc.ts";
+import { IdGeneratorLive } from "../services/id-generator.ts";
 import { makeKvTaskRepositoryLive } from "../services/task-repository-kv.ts";
 import { ApiKv } from "./kv.ts";
 import { ExampleSecret } from "./secret.ts";
@@ -35,6 +36,7 @@ const makeAppLive = (tasks: Cloudflare.KVNamespaceClient<string>) =>
 	).pipe(
 		Layer.provide(TaskRpcLive),
 		Layer.provide(makeKvTaskRepositoryLive(tasks)),
+		Layer.provide(IdGeneratorLive),
 		Layer.provide(RpcSerialization.layerJson),
 	);
 
