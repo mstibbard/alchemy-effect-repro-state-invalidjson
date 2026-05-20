@@ -7,7 +7,7 @@ import * as HttpRouter from "effect/unstable/http/HttpRouter";
 import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
-import { makeTaskApiLive } from "../http.ts";
+import { TaskApiLive } from "../http.ts";
 import { TaskRpc, TaskRpcLive } from "../rpc.ts";
 import { makeKvTaskRepositoryLive } from "../services/task-repository-kv.ts";
 import { ApiKv } from "./kv.ts";
@@ -21,7 +21,7 @@ const corsHeaders = {
 
 const makeAppLive = (tasks: Cloudflare.KVNamespaceClient<string>) =>
 	Layer.mergeAll(
-		makeTaskApiLive(tasks),
+		TaskApiLive,
 
 		RpcServer.layerHttp({
 			group: TaskRpc,
