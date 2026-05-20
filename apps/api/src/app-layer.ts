@@ -11,6 +11,7 @@ import { TaskApiLive } from "./http.ts";
 import { TaskRpc, TaskRpcLive } from "./rpc.ts";
 import { IdGeneratorLive } from "./services/id-generator.ts";
 import { makeKvTaskRepositoryLive } from "./services/task-repository-kv.ts";
+import { TaskOperationsLive } from "./task-operations.ts";
 
 const corsHeaders = {
 	"access-control-allow-origin": "*",
@@ -32,6 +33,7 @@ export const makeAppLive = (tasks: KVNamespaceClient<string>) =>
 		}),
 	).pipe(
 		Layer.provide(TaskRpcLive),
+		Layer.provide(TaskOperationsLive),
 		Layer.provide(makeKvTaskRepositoryLive(tasks)),
 		Layer.provide(IdGeneratorLive),
 		Layer.provide(RpcSerialization.layerJson),

@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "../domain/task.ts";
-import { IdGenerator, makeCryptoIdGenerator } from "./id-generator.ts";
 import { TaskRepository } from "./task-repository.ts";
 
 const storageFailed = (cause: { readonly message: string }) => new TaskStorageFailed({ message: cause.message });
@@ -14,10 +13,7 @@ const decodeTask = (input: unknown): Effect.Effect<Task, TaskDecodeFailed> =>
 		Effect.mapError((error) => new TaskDecodeFailed({ message: String(error) })),
 	);
 
-export const makeKvTaskRepository = (
-	tasks: KVNamespaceClient<string>,
-	ids: IdGenerator["Service"] = makeCryptoIdGenerator(),
-): TaskRepository["Service"] => ({
+export const makeKvTaskRepository = (tasks: KVNamespaceClient<string>): TaskRepository["Service"] => ({
 	list: tasks
 		.list()
 		.pipe(
@@ -51,21 +47,11 @@ export const makeKvTaskRepository = (
 				return decodeTask(task);
 			}),
 		),
-	create: ({ title }) => {
-		return Effect.gen(function* () {
-			const task = new Task({
-				id: yield* ids.nextUuid,
-				title,
-				completed: false,
-			});
-
-			yield* tasks
-				.put(task.id, JSON.stringify(task))
-				.pipe(Effect.mapError(storageFailed));
-			return task;
-		});
-	},
+	save: (task) =>
+		tasks
+			.put(task.id, JSON.stringify(task))
+			.pipe(Effect.mapError(storageFailed), Effect.as(task)),
 });
 
 export const makeKvTaskRepositoryLive = (tasks: KVNamespaceClient<string>) =>
-	Layer.effect(TaskRepository)(IdGenerator.useSync((ids) => makeKvTaskRepository(tasks, ids)));
+	Layer.succeed(TaskRepository)(makeKvTaskRepository(tasks));

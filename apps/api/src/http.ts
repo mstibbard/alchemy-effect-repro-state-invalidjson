@@ -8,7 +8,7 @@ import * as HttpApiGroup from "effect/unstable/httpapi/HttpApiGroup";
 import * as HttpApiSchema from "effect/unstable/httpapi/HttpApiSchema";
 
 import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "./domain/task.ts";
-import { TaskRepository } from "./services/task-repository.ts";
+import { TaskOperations } from "./task-operations.ts";
 
 const taskNotFoundHttp = TaskNotFound.pipe(HttpApiSchema.status("NotFound"));
 const taskStorageFailedHttp = TaskStorageFailed.pipe(HttpApiSchema.status("InternalServerError"));
@@ -43,7 +43,7 @@ export const TaskApiLive = HttpApiBuilder.layer(TaskApi).pipe(
 	Layer.provide(
 		HttpApiBuilder.group(TaskApi, "Tasks", (handlers) =>
 			Effect.gen(function* () {
-				const tasks = yield* TaskRepository;
+				const tasks = yield* TaskOperations;
 				return handlers
 					.handle("listTasks", Effect.fn(() => tasks.list))
 					.handle("getTask", Effect.fn((req) => tasks.get(req.params)))
