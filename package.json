@@ -15,6 +15,7 @@
 		"clean": "git clean -fqdx . -e .env",
 		"deploy": "bun run --workspaces --if-present deploy",
 		"deploy:api": "bun run --filter @repo/api deploy --yes",
+		"deploy:auth": "bun --env-file=.env run --filter @repo/auth deploy --yes",
 		"deploy:web": "bun run --filter @repo/web deploy --yes",
 		"dev": "bun run --workspaces --if-present --parallel dev",
 		"fmt": "oxfmt",
