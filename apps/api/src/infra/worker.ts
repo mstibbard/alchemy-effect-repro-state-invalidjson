@@ -8,7 +8,8 @@ import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
 import { makeTaskApiLive } from "../http.ts";
-import { makeTaskRpcLive, TaskRpc } from "../rpc.ts";
+import { TaskRpc, TaskRpcLive } from "../rpc.ts";
+import { makeKvTaskRepositoryLive } from "../services/task-repository-kv.ts";
 import { ApiKv } from "./kv.ts";
 import { ExampleSecret } from "./secret.ts";
 
@@ -31,7 +32,11 @@ const makeAppLive = (tasks: Cloudflare.KVNamespaceClient<string>) =>
 			allowedMethods: ["GET", "POST", "OPTIONS"],
 			allowedHeaders: ["b3", "content-type", "traceparent", "tracestate"],
 		}),
-	).pipe(Layer.provide(makeTaskRpcLive(tasks)), Layer.provide(RpcSerialization.layerJson));
+	).pipe(
+		Layer.provide(TaskRpcLive),
+		Layer.provide(makeKvTaskRepositoryLive(tasks)),
+		Layer.provide(RpcSerialization.layerJson),
+	);
 
 export class Worker extends Cloudflare.Worker<Worker, {}>()("Worker", { main: import.meta.path }) {}
 

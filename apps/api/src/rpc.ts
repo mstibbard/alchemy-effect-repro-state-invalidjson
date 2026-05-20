@@ -1,9 +1,9 @@
-import type { KVNamespaceClient } from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Rpc, RpcGroup, RpcSerialization, RpcServer } from "effect/unstable/rpc";
 
-import { CreateTaskFailed, createTask as createTaskImpl, getTask as getTaskImpl, Task, TaskNotFound } from "./task.ts";
+import { CreateTaskFailed, Task, TaskNotFound } from "./domain/task.ts";
+import { TaskRepository } from "./services/task-repository.ts";
 
 export const getTaskRpc = Rpc.make("getTask", {
 	success: Task,
@@ -25,18 +25,18 @@ export class TaskRpc extends RpcGroup.make(getTaskRpc, createTaskRpc) {}
 
 export type TaskRpcs = RpcGroup.Rpcs<typeof TaskRpc>;
 
-export const makeTaskRpcLive = (tasks: KVNamespaceClient<string>) =>
-	TaskRpc.toLayer(
-		Effect.gen(function* () {
-			return {
-				getTask: getTaskImpl(tasks),
-				createTask: createTaskImpl(tasks),
-			};
-		}),
-	);
+export const TaskRpcLive = TaskRpc.toLayer(
+	Effect.gen(function* () {
+		const tasks = yield* TaskRepository;
+		return {
+			getTask: tasks.get,
+			createTask: tasks.create,
+		};
+	}),
+);
 
-export const makeTaskRpcHttpEffect = (tasks: KVNamespaceClient<string>) =>
+export const makeTaskRpcHttpEffect = () =>
 	RpcServer.toHttpEffect(TaskRpc).pipe(
-		Effect.provide(makeTaskRpcLive(tasks)),
+		Effect.provide(TaskRpcLive),
 		Effect.provide(RpcSerialization.layerJson),
 	);
