@@ -1,10 +1,18 @@
 import type { KVNamespaceClient } from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
-import { CreateTaskFailed, ListTasksFailed, Task, TaskNotFound } from "../domain/task.ts";
+import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "../domain/task.ts";
 import { IdGenerator, makeCryptoIdGenerator } from "./id-generator.ts";
 import { TaskRepository } from "./task-repository.ts";
+
+const storageFailed = (cause: { readonly message: string }) => new TaskStorageFailed({ message: cause.message });
+
+const decodeTask = (input: unknown): Effect.Effect<Task, TaskDecodeFailed> =>
+	Schema.decodeUnknownEffect(Task)(input).pipe(
+		Effect.mapError((error) => new TaskDecodeFailed({ message: String(error) })),
+	);
 
 export const makeKvTaskRepository = (
 	tasks: KVNamespaceClient<string>,
@@ -13,7 +21,7 @@ export const makeKvTaskRepository = (
 	list: tasks
 		.list()
 		.pipe(
-			Effect.mapError((cause) => new ListTasksFailed({ message: cause.message })),
+			Effect.mapError(storageFailed),
 			Effect.flatMap((listed) => {
 				const keys: Array<string> = listed.keys.map((key: { name: string }) => key.name);
 
@@ -22,21 +30,26 @@ export const makeKvTaskRepository = (
 				}
 
 				return tasks
-					.get<Task>(keys, "json")
+					.get<unknown>(keys, "json")
 					.pipe(
-						Effect.mapError((cause) => new ListTasksFailed({ message: cause.message })),
-						Effect.map((values) =>
-							Array.from(values.values(), (task) => (task ? new Task(task) : undefined)).filter(
-								(task): task is Task => task !== undefined,
-							),
+						Effect.mapError(storageFailed),
+						Effect.flatMap((values) =>
+							Effect.forEach(Array.from(values.values()), (task) =>
+								task === null ? Effect.succeed(undefined) : decodeTask(task),
+							).pipe(Effect.map((tasks) => tasks.filter((task): task is Task => task !== undefined))),
 						),
 					);
 			}),
 		),
 	get: ({ id }) =>
-		tasks.get<Task>(id, "json").pipe(
-			Effect.mapError(() => new TaskNotFound({ id })),
-			Effect.flatMap((task) => (task ? Effect.succeed(new Task(task)) : Effect.fail(new TaskNotFound({ id })))),
+		tasks.get<unknown>(id, "json").pipe(
+			Effect.mapError(storageFailed),
+			Effect.flatMap((task): Effect.Effect<Task, TaskNotFound | TaskDecodeFailed> => {
+				if (task === null) {
+					return Effect.fail(new TaskNotFound({ id }));
+				}
+				return decodeTask(task);
+			}),
 		),
 	create: ({ title }) => {
 		return Effect.gen(function* () {
@@ -48,7 +61,7 @@ export const makeKvTaskRepository = (
 
 			yield* tasks
 				.put(task.id, JSON.stringify(task))
-				.pipe(Effect.mapError((cause) => new CreateTaskFailed({ message: cause.message })));
+				.pipe(Effect.mapError(storageFailed));
 			return task;
 		});
 	},

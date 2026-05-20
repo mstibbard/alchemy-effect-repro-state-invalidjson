@@ -15,3 +15,11 @@ export class CreateTaskFailed extends Schema.TaggedClass<CreateTaskFailed>()("Cr
 export class ListTasksFailed extends Schema.TaggedClass<ListTasksFailed>()("ListTasksFailed", {
 	message: Schema.String,
 }) {}
+
+export class TaskStorageFailed extends Schema.TaggedClass<TaskStorageFailed>()("TaskStorageFailed", {
+	message: Schema.String,
+}) {}
+
+export class TaskDecodeFailed extends Schema.TaggedClass<TaskDecodeFailed>()("TaskDecodeFailed", {
+	message: Schema.String,
+}) {}

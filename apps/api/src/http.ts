@@ -7,29 +7,29 @@ import * as HttpApiEndpoint from "effect/unstable/httpapi/HttpApiEndpoint";
 import * as HttpApiGroup from "effect/unstable/httpapi/HttpApiGroup";
 import * as HttpApiSchema from "effect/unstable/httpapi/HttpApiSchema";
 
-import { CreateTaskFailed, ListTasksFailed, Task, TaskNotFound } from "./domain/task.ts";
+import { Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "./domain/task.ts";
 import { TaskRepository } from "./services/task-repository.ts";
 
 const taskNotFoundHttp = TaskNotFound.pipe(HttpApiSchema.status("NotFound"));
-const listTasksFailedHttp = ListTasksFailed.pipe(HttpApiSchema.status("InternalServerError"));
-const createTaskFailedHttp = CreateTaskFailed.pipe(HttpApiSchema.status("InternalServerError"));
+const taskStorageFailedHttp = TaskStorageFailed.pipe(HttpApiSchema.status("InternalServerError"));
+const taskDecodeFailedHttp = TaskDecodeFailed.pipe(HttpApiSchema.status("InternalServerError"));
 
 const getTaskHttp = HttpApiEndpoint.get("getTask", "/:id", {
 	params: {
 		id: Schema.String,
 	},
 	success: Task,
-	error: taskNotFoundHttp,
+	error: [taskNotFoundHttp, taskStorageFailedHttp, taskDecodeFailedHttp],
 });
 
 const listTasksHttp = HttpApiEndpoint.get("listTasks", "/", {
 	success: Schema.Array(Task),
-	error: listTasksFailedHttp,
+	error: [taskStorageFailedHttp, taskDecodeFailedHttp],
 });
 
 const createTaskHttp = HttpApiEndpoint.post("createTask", "/", {
 	success: Task,
-	error: createTaskFailedHttp,
+	error: taskStorageFailedHttp,
 	payload: Schema.Struct({
 		title: Schema.String,
 	}),

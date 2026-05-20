@@ -1,5 +1,5 @@
 import type { KVNamespaceClient } from "alchemy/Cloudflare";
-export { CreateTaskFailed, ListTasksFailed, Task, TaskNotFound } from "./domain/task.ts";
+export { CreateTaskFailed, ListTasksFailed, Task, TaskDecodeFailed, TaskNotFound, TaskStorageFailed } from "./domain/task.ts";
 import { makeKvTaskRepository } from "./services/task-repository-kv.ts";
 
 export const listTasks = (tasks: KVNamespaceClient<string>) =>
